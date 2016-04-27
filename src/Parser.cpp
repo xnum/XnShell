@@ -2,9 +2,40 @@
 
 const string Parser::PIPE_DELIM = "|";
 
+bool Command::operator== (const Command& rhs) const
+{
+    if( name != rhs.name )
+        return false;
+    if( redirectStdout != rhs.redirectStdout )
+        return false;
+    if( redirectStdin != rhs.redirectStdin )
+        return false;
+    if( isSyntaxError != rhs.isSyntaxError )
+        return false;
+    if( args.size() != rhs.args.size() )
+        return false;
+    for( size_t i = 0 ; i < args.size() ; ++i )
+        if( args[i] != rhs.args[i] )
+            return false;
+    return true;
+}
+
 ostream &operator<<(ostream &os, const Command &cmd)
 {
-    return os << "[" + cmd.originStr + "]";
+    string out = "\n======\n";
+    out += "name: " + cmd.name + "\n";
+    for( size_t i = 0 ; i < cmd.args.size() ; ++i ) {
+        out += "arg[" + std::to_string(i);
+        out += "] = ";
+        out += cmd.args[i];
+        out += "\n";
+    }
+    out += "reOut: " + cmd.redirectStdout + "\n";
+    out += "reIn: " + cmd.redirectStdin + "\n";
+    out += "Err: ";
+    out += std::to_string(cmd.isSyntaxError);
+    out += "\n======\n";
+    return os << out;
 }
 
 vector<Command> Parser::Parse(string line)
@@ -51,46 +82,41 @@ Command Parser::takeCommand(string str)
     Command ret;
     str = trim(str);
     ret.originStr = str;
-    str += ' ';
 
-    size_t begin_pos = 0, end_pos = 0;
+    string reBuildStr = "";
 
+    bool emitSyntax = false;
     for( size_t i = 0 ; i < str.size() ; ++i ) {
-        if( str[i] == ' ' || str[i] == '>' || str[i] == '<' ) {
-            end_pos = i;
-            if( begin_pos >= end_pos ) {
-                fprintf(stderr, "Syntax error by position underflow");
-                ret.isSyntaxError = true;
-                return ret;
-            }
-
-            string pat = str.substr( begin_pos == 0 ? 0 : begin_pos+1
-                    , end_pos-begin_pos);
-            cout << pat << endl;
-            if( str[i] == ' ' && begin_pos == 0 )
-                ret.name = pat;
-            if( str[i] == ' ' && begin_pos != 0 )
-                ret.args.push_back(pat);
-            if( str[i] == '>' && ret.redirectStdout == "" )
-                ret.redirectStdout = pat;
-            if( str[i] == '>' && ret.redirectStdout != "" ) {
-                fprintf(stderr, "Syntax error by duplicate stdout redirection");
-                ret.isSyntaxError = true;
-                return ret;
-            }
-            if( str[i] == '<' && ret.redirectStdin == "" )
-                ret.redirectStdin = pat;
-            if( str[i] == '<' && ret.redirectStdin != "" ) {
-                fprintf(stderr, "Syntax error by duplicate stdin redirection");
-                ret.isSyntaxError = true;
-                return ret;
-            }
-
-            begin_pos = i;
+        if( str[i] == '>' || str[i] == '<' ) {
+            emitSyntax = true;
+            reBuildStr += ' ';
         }
+        else if( str[i] != ' ') {
+            emitSyntax = false;
+        }
+
+        if(!( str[i] == ' ' && emitSyntax == true ))
+            reBuildStr += str[i];
     }
 
-    cout << endl;
+    stringstream ss(reBuildStr);
+
+    string token;
+    while( ss >> token ) {
+        if( ret.name == "" )
+            ret.name = token;
+        else if( token[0] == '>' ) {
+            token.erase(token.begin());
+            ret.redirectStdout = token;
+        }
+        else if( token[0] == '<' ) {
+            token.erase(token.begin());
+            ret.redirectStdin = token;
+        }
+        else {
+            ret.args.push_back(token);
+        }
+    }
 
     return ret;
 }

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -14,6 +15,13 @@ namespace xnsh {
 using xnsh::Command;
 using xnsh::Parser;
 
+enum CommandResult {
+    CmdRes_Ok = 0,
+    CmdRes_PosErr,
+    CmdRes_DupOutRe,
+    CmdRes_DupInRe
+};
+
 class Command {
     public:
         string name;
@@ -21,10 +29,16 @@ class Command {
         string redirectStdout;
         string redirectStdin;
         string originStr; // for debug
-        bool isSyntaxError;
+        int isSyntaxError;
 
-        Command() {}
-        
+        Command() { isSyntaxError = CmdRes_Ok; }
+        Command(const string& nam,
+                const vector<string>& arg,
+                const string& reOut,
+                const string& reIn,
+                int synErr)
+            : name(nam), args(arg), redirectStdout(reOut), redirectStdin(reIn), isSyntaxError(synErr) {}
+        bool operator== (const Command& rhs) const;        
 };
 
 ostream &operator<<(ostream &os, const Command &cmd);

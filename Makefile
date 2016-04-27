@@ -36,7 +36,7 @@ TESTDIR  = unittest
 
 CXX       = g++ -fdiagnostics-color=always
 # compiling flags here
-CXXFLAGS   = -g -Ofast -Os -std=c++11 -Wall -Wextra -pthread -I$(INCDIR)
+CXXFLAGS   = -g -std=c++11 -Wall -Wextra -pthread -I$(INCDIR)
 
 # linking flags here
 LDFLAGS   = -Wall -lm -lpthread
@@ -62,7 +62,7 @@ $(OBJS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(TEST_OBJS): $(OBJDIR)/%.o : $(TESTDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -isystem $(GTEST_DIR)/include -include gtest/gtest.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -isystem $(GTEST_DIR)/include
 
 .PHONEY: clean
 clean:
