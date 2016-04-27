@@ -3,6 +3,11 @@
 Executor::Executor(const Command& cmd)
 {
     cmdHnd = cmd;
+    done = false;
+}
+
+int Executor::PipeWith(Executor&) {
+    return 0;
 }
 
 int Executor::Start()
@@ -16,13 +21,6 @@ int Executor::Start()
         return rc;
     }
 
-    if( rc > 0 ) { // parent
-        if( waitpid(rc, NULL, 0) != rc ) {
-            cout << "Wait child error" << endl;
-            return -1;
-        }
-    }
-
     if( rc == 0 ) { // child
         if( cmdHnd.redirectStdout != "" )
             freopen(cmdHnd.redirectStdout.c_str(), "w+", stdout);
@@ -30,6 +28,8 @@ int Executor::Start()
             freopen(cmdHnd.redirectStdin.c_str(), "r+", stdin);
         execvp(argv[0],argv);
     }
+
+    pid = rc;
 
     return 0;
 }

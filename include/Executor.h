@@ -16,11 +16,13 @@ using xnsh::Executor;
 
 class Executor {
     public:
+        bool done;
+        pid_t pid;
+
         Executor(const Command& cmd);
         int PipeWith(Executor&);
         int Start();
 
-    private:
+    protected:
         Command cmdHnd;
-        pid_t pid;
 };
