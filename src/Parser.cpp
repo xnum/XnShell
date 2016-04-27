@@ -4,13 +4,15 @@ const string Parser::PIPE_DELIM = "|";
 
 bool Command::operator== (const Command& rhs) const
 {
+    if( isSyntaxError != rhs.isSyntaxError )
+        return false;
+    if( isSyntaxError == rhs.isSyntaxError && isSyntaxError != CmdRes_Ok )
+        return true;
     if( name != rhs.name )
         return false;
     if( redirectStdout != rhs.redirectStdout )
         return false;
     if( redirectStdin != rhs.redirectStdin )
-        return false;
-    if( isSyntaxError != rhs.isSyntaxError )
         return false;
     if( args.size() != rhs.args.size() )
         return false;
@@ -106,10 +108,18 @@ Command Parser::takeCommand(string str)
         if( ret.name == "" )
             ret.name = token;
         else if( token[0] == '>' ) {
+            if( ret.redirectStdout != "" ) {
+                ret.isSyntaxError = CmdRes_DupOutRe;
+                return ret;
+            }
             token.erase(token.begin());
             ret.redirectStdout = token;
         }
         else if( token[0] == '<' ) {
+            if( ret.redirectStdin != "" ) {
+                ret.isSyntaxError = CmdRes_DupInRe;
+                return ret;
+            }
             token.erase(token.begin());
             ret.redirectStdin = token;
         }

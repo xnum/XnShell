@@ -16,4 +16,9 @@ TEST( ctor , str )
     auto arr4 = Parser::Parse("calc -a -b -c < in -asd -efg > out -d -e -f");
     ASSERT_EQ( arr4[0], Command( "calc", {"-a","-b","-c","-asd","-efg","-d","-e","-f"}, "out", "in", CmdRes_Ok) );
 
+    auto arr5 = Parser::Parse("ls -al >a >b >c >d");
+    ASSERT_EQ( arr5[0], Command( "ls", {"-al"}, "", "", CmdRes_DupOutRe) );
+
+    auto arr6 = Parser::Parse("ls -al >a <b <c >d");
+    ASSERT_EQ( arr6[0], Command( "ls", {"-al"}, "", "", CmdRes_DupInRe) );
 }
