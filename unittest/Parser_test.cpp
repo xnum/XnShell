@@ -22,3 +22,11 @@ TEST( ctor , str )
     auto arr6 = Parser::Parse("ls -al >a <b <c >d");
     ASSERT_EQ( arr6[0], Command( "ls", {"-al"}, "", "", CmdRes_DupInRe) );
 }
+
+TEST( ctor , pipe )
+{
+    auto arr1 = Parser::Parse("ls -al | in.py < config | out.py -s > result");
+    ASSERT_EQ( arr1[0], Command( "ls", {"-al"}, "", "", CmdRes_Ok) );
+    ASSERT_EQ( arr1[1], Command( "in.py", {}, "", "config", CmdRes_Ok) );
+    ASSERT_EQ( arr1[2], Command( "out.py", {"-s"}, "result", "", CmdRes_Ok) );
+}

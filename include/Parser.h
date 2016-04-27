@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -30,15 +31,18 @@ class Command {
         string redirectStdin;
         string originStr; // for debug
         int isSyntaxError;
+        char **argv;
 
-        Command() { isSyntaxError = CmdRes_Ok; }
+        Command() { isSyntaxError = CmdRes_Ok; argv = NULL; }
         Command(const string& nam,
                 const vector<string>& arg,
                 const string& reOut,
                 const string& reIn,
                 int synErr)
-            : name(nam), args(arg), redirectStdout(reOut), redirectStdin(reIn), isSyntaxError(synErr) {}
+            : name(nam), args(arg), redirectStdout(reOut), redirectStdin(reIn), isSyntaxError(synErr) { argv = NULL; }
+        ~Command();
         bool operator== (const Command& rhs) const;        
+        char* const* toArgv();
 };
 
 ostream &operator<<(ostream &os, const Command &cmd);

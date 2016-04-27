@@ -2,6 +2,17 @@
 
 const string Parser::PIPE_DELIM = "|";
 
+Command::~Command()
+{
+    if(argv!=NULL)
+    {
+        char **ptr = argv;
+        while( *ptr != NULL )
+            free(*ptr++);
+        free(argv);
+    }
+}
+
 bool Command::operator== (const Command& rhs) const
 {
     if( isSyntaxError != rhs.isSyntaxError )
@@ -20,6 +31,17 @@ bool Command::operator== (const Command& rhs) const
         if( args[i] != rhs.args[i] )
             return false;
     return true;
+}
+
+char* const* Command::toArgv()
+{
+    argv = (char**)calloc(args.size()+2, sizeof(char*));
+    argv[0] = strdup(name.c_str());
+    for(size_t i = 0 ; i < args.size() ; ++i )
+        argv[i+1] = strdup(args[i].c_str());
+    argv[args.size()+1] = NULL;
+
+    return argv;
 }
 
 ostream &operator<<(ostream &os, const Command &cmd)
@@ -47,7 +69,9 @@ vector<Command> Parser::Parse(string line)
     vector<string> commands = split(line, PIPE_DELIM);
 
     for( string str : commands ) {
-        ret.push_back(takeCommand(str));
+        str = trim(str);
+        if(str!="")
+            ret.push_back(takeCommand(str));
     }
 
     return ret;
@@ -74,6 +98,8 @@ http://stackoverflow.com/questions/25829143/c-trim-whitespace-from-a-string
 */
 string Parser::trim(const string& str)
 {
+    if(str.size()==0)
+        return "";
     size_t first = str.find_first_not_of(' ');
     size_t last = str.find_last_not_of(' ');
     return str.substr(first, (last-first+1));
@@ -82,7 +108,6 @@ string Parser::trim(const string& str)
 Command Parser::takeCommand(string str)
 {
     Command ret;
-    str = trim(str);
     ret.originStr = str;
 
     string reBuildStr = "";
