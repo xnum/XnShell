@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
-#include <set>
 
 #include <signal.h>
 
@@ -37,12 +36,13 @@ int main()
 
     InputHandler InHnd;
     while( 1 ) {
+		g_exes.clear();
         cout << "$ ";
         line = InHnd.Getline();
         auto cmds = Parser::Parse(line);
 
         for( size_t i = 0 ; i < cmds.size() ; ++i ) {
-            cout << cmds[i] << endl;
+            //cout << cmds[i] << endl;
             Executor exec(cmds[i]);
             g_exes.push_back(exec);
         }
@@ -55,22 +55,10 @@ int main()
             g_exes[i].Start();
         }
 
-        set<int> closed_fd;
-        for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
-            for( int j = 0 ; j < 2 ; ++j ) {
-                for( int k = 0 ; k < 2 ; ++k ) {
-                    const bool is_in = closed_fd.find(g_exes[i].fd[j][k]) != closed_fd.end();
-                    if( g_exes[i].fd[j][k] != -1 && !is_in ) {
-                        printf("free %\n",g_exes[i].fd[j][k]);
-                        close(g_exes[i].fd[j][k]);
-                        closed_fd.insert(g_exes[i].fd[j][k]);
-                    }
-                }
-            }
-        }
+		xnsh::CloseAllPipe();
 
         while( 1 ) {
-            sleep(1);
+            usleep(10000);
             bool ok = true;
             for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
                 if( g_exes[i].done == false )

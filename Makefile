@@ -34,7 +34,7 @@ INCDIR   = include
 TESTDIR  = unittest
 
 
-CXX       = g++ -fdiagnostics-color=always
+CXX       = g++
 # compiling flags here
 CXXFLAGS   = -g -std=c++11 -Wall -Wextra -pthread -I$(INCDIR)
 

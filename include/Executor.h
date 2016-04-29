@@ -2,14 +2,18 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <set>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "Parser.h"
 
+
 namespace xnsh {
     class Executor;
+
+	void CloseAllPipe();
 };
 
 using xnsh::Executor;
@@ -27,3 +31,6 @@ class Executor {
     protected:
         Command cmdHnd;
 };
+
+
+extern vector<Executor> g_exes;
