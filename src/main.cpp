@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <set>
 
 #include <signal.h>
 
@@ -52,6 +53,20 @@ int main()
 
         for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
             g_exes[i].Start();
+        }
+
+        set<int> closed_fd;
+        for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
+            for( int j = 0 ; j < 2 ; ++j ) {
+                for( int k = 0 ; k < 2 ; ++k ) {
+                    const bool is_in = closed_fd.find(g_exes[i].fd[j][k]) != closed_fd.end();
+                    if( g_exes[i].fd[j][k] != -1 && !is_in ) {
+                        printf("free %\n",g_exes[i].fd[j][k]);
+                        close(g_exes[i].fd[j][k]);
+                        closed_fd.insert(g_exes[i].fd[j][k]);
+                    }
+                }
+            }
         }
 
         while( 1 ) {

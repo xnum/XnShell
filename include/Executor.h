@@ -18,6 +18,7 @@ class Executor {
     public:
         bool done;
         pid_t pid;
+        int fd[2][2];
 
         Executor(const Command& cmd);
         int PipeWith(Executor&);
