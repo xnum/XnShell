@@ -24,7 +24,7 @@ int Executor::PipeWith(Executor& rhs) {
     return 0;
 }
 
-int Executor::Start()
+int Executor::Start(const vector<Executor>& pgrp, int index)
 {
     char* const* argv = cmdHnd.toArgv();
 
@@ -36,6 +36,7 @@ int Executor::Start()
     }
 
     if( rc == 0 ) { // child
+		if(index==0)setpgid(0,0);
         if( cmdHnd.redirectStdout != "" )
             freopen(cmdHnd.redirectStdout.c_str(), "w+", stdout);
         if( cmdHnd.redirectStdin != "" )
@@ -50,7 +51,7 @@ int Executor::Start()
             close(fd[1][0]);
 			fd[1][0] = -1;
         }
-		CloseAllPipe();
+		CloseAllPipe(pgrp);
         execvp(argv[0],argv);
     }
 
@@ -59,7 +60,7 @@ int Executor::Start()
     return 0;
 }
 
-void xnsh::CloseAllPipe()
+void xnsh::CloseAllPipe(const vector<Executor> &g_exes)
 {
 	set<int> closed_fd;
 	for( size_t i = 0 ; i < g_exes.size() ; ++i ) {

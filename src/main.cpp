@@ -7,8 +7,10 @@
 #include "Executor.h"
 #include "Parser.h"
 #include "InputHandler.h"
+#include "ProcessGrouper.h"
 
-vector<Executor> g_exes;
+vector<ProcessGrouper> pgrps;
+bool ready = true;
 
 void childExit(int sig) {
     int status = 0;
@@ -20,25 +22,44 @@ void childExit(int sig) {
         printf("catch a child %d\n",pid);
     }
 
-    for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
-        if( g_exes[i].pid == pid )
-            g_exes[i].done = true;
-    }
+	for( size_t i = 0 ; i < pgrps.size() ; ++i ) {
+		int rc = pgrps[i].NotifyTerminated(pid);
+		if( rc != ProcNotMine ) {
+			if( rc == ProcAllDone ) {
+				pgrps.erase(pgrps.begin() + i);
+				ready = true;
+			}
+			break;
+		}
+	}
 
     return;
+}
+
+void killSignal(int sig) {
+	if(pgrps.size() >= 1) 
+		pgrps[0].PassSignal(sig);
+	else
+		exit(0);
+	return;
 }
 
 int main()
 {
     signal(SIGCHLD, childExit);
+    signal(SIGINT, killSignal);
+    signal(SIGQUIT, killSignal);
     //char* const envp[] = { 0, NULL };
     string line;
 
     InputHandler InHnd;
     while( 1 ) {
-		g_exes.clear();
+		ready = false;
+		vector<Executor> g_exes;
         cout << "$ ";
         line = InHnd.Getline();
+		if( line == "" )
+			continue;
         auto cmds = Parser::Parse(line);
 
         for( size_t i = 0 ; i < cmds.size() ; ++i ) {
@@ -47,26 +68,20 @@ int main()
             g_exes.push_back(exec);
         }
 
-        for( size_t i = 0 ; i < g_exes.size()-1 ; ++i ) {
-            g_exes[i].PipeWith(g_exes[i+1]);
-        }
+		pgrps.emplace_back(ProcessGrouper(g_exes));
+		ProcessGrouper &pgrp = *pgrps.rbegin();
+		if( 0 != pgrp.Start()) {
+			printf("Error: %s\n",strerror(errno));
+			pgrp.PassSignal(SIGKILL);
+			continue;
+		}
 
-        for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
-            g_exes[i].Start();
-        }
-
-		xnsh::CloseAllPipe();
-
-        while( 1 ) {
-            usleep(10000);
-            bool ok = true;
-            for( size_t i = 0 ; i < g_exes.size() ; ++i ) {
-                if( g_exes[i].done == false )
-                    ok = false;
-            }
-            if(ok)break;
-        }
-
+		while( 1 ) {
+			if( ready == false )
+				usleep(10000);
+			else
+				break;
+		}
     }
     return 0;
 }

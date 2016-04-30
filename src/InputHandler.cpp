@@ -28,9 +28,23 @@ string InputHandler::Getline()
     while(1)
     {
         int ch = getch();
-        if(ch == KeyEnter)
+        if(ch == KeyEnter) {
+			putchar('\n');
             return line;
-        //printf("[%d]",ch);
+		}
+		if(ch == '\033') {
+			getch(); 
+			ch = getch();
+			if(ch == 'A')
+				putchar('A');
+			if(ch == 'B')
+				putchar('B');
+			if(ch == 'C')
+				putchar('C');
+			if(ch == 'D')
+				putchar('D');
+			continue;
+		}
         if(ch != KeyTab && ch != KeyBackSpace) {
             putchar(ch);
             line += ch;

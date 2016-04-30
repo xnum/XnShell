@@ -13,7 +13,7 @@
 namespace xnsh {
     class Executor;
 
-	void CloseAllPipe();
+	void CloseAllPipe(const vector<Executor>&);
 };
 
 using xnsh::Executor;
@@ -23,14 +23,11 @@ class Executor {
         bool done;
         pid_t pid;
         int fd[2][2];
+        Command cmdHnd;
 
         Executor(const Command& cmd);
         int PipeWith(Executor&);
-        int Start();
+        int Start(const vector<Executor>&,int);
 
-    protected:
-        Command cmdHnd;
 };
 
-
-extern vector<Executor> g_exes;
