@@ -16,6 +16,7 @@ enum StatusResult {
 
 class ProcessGrouper {
 	public:
+		string originCmds;
 
 		ProcessGrouper(vector<Executor> exes) :
 			executors(exes) {}

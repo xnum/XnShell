@@ -40,6 +40,10 @@ int ProcessGrouper::Start()
 
 	xnsh::CloseAllPipe(executors);
 
+	tcsetpgrp(0, executors[0].pid);
+	tcsetpgrp(1, executors[0].pid);
+	tcsetpgrp(2, executors[0].pid);
+
 	return 0;
 }
 

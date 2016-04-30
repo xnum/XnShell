@@ -28,6 +28,9 @@ void childExit(int sig) {
 			if( rc == ProcAllDone ) {
 				pgrps.erase(pgrps.begin() + i);
 				ready = true;
+				tcsetpgrp(0, getpgid(0));
+				tcsetpgrp(1, getpgid(0));
+				tcsetpgrp(2, getpgid(0));
 			}
 			break;
 		}
@@ -44,11 +47,31 @@ void killSignal(int sig) {
 	return;
 }
 
+void backToShell(int sig) {
+	pgrps[0].PassSignal(SIGSTOP);
+	printf("[0] %s Paused\n",pgrps[0].originCmds.c_str());
+	ready = true;
+
+	tcsetpgrp(0, getpgid(0));
+	tcsetpgrp(1, getpgid(0));
+	tcsetpgrp(2, getpgid(0));
+	return;
+}
+
+void bringToFront()
+{
+	pgrps[0].PassSignal(SIGCONT);
+	printf("[0] %s Resumed\n",pgrps[0].originCmds.c_str());
+	return;
+}
+
 int main()
 {
+	signal(SIGTTOU, SIG_IGN);
     signal(SIGCHLD, childExit);
     signal(SIGINT, killSignal);
     signal(SIGQUIT, killSignal);
+	signal(SIGTSTP, backToShell);
     //char* const envp[] = { 0, NULL };
     string line;
 
@@ -60,28 +83,39 @@ int main()
         line = InHnd.Getline();
 		if( line == "" )
 			continue;
-        auto cmds = Parser::Parse(line);
+		if( line != "fg" ) {
+			auto cmds = Parser::Parse(line);
 
-        for( size_t i = 0 ; i < cmds.size() ; ++i ) {
-            //cout << cmds[i] << endl;
-            Executor exec(cmds[i]);
-            g_exes.push_back(exec);
-        }
+			for( size_t i = 0 ; i < cmds.size() ; ++i ) {
+				//cout << cmds[i] << endl;
+				Executor exec(cmds[i]);
+				g_exes.push_back(exec);
+			}
 
-		pgrps.emplace_back(ProcessGrouper(g_exes));
-		ProcessGrouper &pgrp = *pgrps.rbegin();
-		if( 0 != pgrp.Start()) {
-			printf("Error: %s\n",strerror(errno));
-			pgrp.PassSignal(SIGKILL);
-			continue;
+			pgrps.emplace_back(ProcessGrouper(g_exes));
+			ProcessGrouper &pgrp = *pgrps.rbegin();
+			pgrp.originCmds = line;
+			if( 0 != pgrp.Start()) {
+				printf("Error: %s\n",strerror(errno));
+				pgrp.PassSignal(SIGKILL);
+				continue;
+			}
+		}
+		else {
+			//bringToFront();
 		}
 
 		while( 1 ) {
-			if( ready == false )
+			if( ready == false ) {
 				usleep(10000);
+				//puts("wait...");
+			}
 			else
 				break;
 		}
+		//puts("next");
     }
+
+	puts("dead");
     return 0;
 }
