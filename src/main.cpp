@@ -12,6 +12,20 @@
 vector<ProcessGrouper> pgrps;
 bool ready = true;
 
+void takeTermCtrl()
+{
+	pid_t pgid = getpgid(0);
+	printf("taking control of pgid = %d\n",pgid);
+
+	if( 0 != tcsetpgrp(0, pgid) )
+		puts("setpgrp error");
+	if( 0 != tcsetpgrp(1, pgid) )
+		puts("setpgrp error");
+	if( 0 != tcsetpgrp(2, pgid) )
+		puts("setpgrp error");
+	ready = true;
+}
+
 void childExit(int sig) {
     int status = 0;
     pid_t pid = wait(&status);
@@ -27,10 +41,7 @@ void childExit(int sig) {
 		if( rc != ProcNotMine ) {
 			if( rc == ProcAllDone ) {
 				pgrps.erase(pgrps.begin() + i);
-				ready = true;
-				tcsetpgrp(0, getpgid(0));
-				tcsetpgrp(1, getpgid(0));
-				tcsetpgrp(2, getpgid(0));
+				takeTermCtrl();
 			}
 			break;
 		}
@@ -48,13 +59,10 @@ void killSignal(int sig) {
 }
 
 void backToShell(int sig) {
+	printf("[0] %s Passing\n",pgrps[0].originCmds.c_str());
 	pgrps[0].PassSignal(SIGSTOP);
 	printf("[0] %s Paused\n",pgrps[0].originCmds.c_str());
-	ready = true;
-
-	tcsetpgrp(0, getpgid(0));
-	tcsetpgrp(1, getpgid(0));
-	tcsetpgrp(2, getpgid(0));
+	takeTermCtrl();
 	return;
 }
 
@@ -87,7 +95,7 @@ int main()
 			auto cmds = Parser::Parse(line);
 
 			for( size_t i = 0 ; i < cmds.size() ; ++i ) {
-				//cout << cmds[i] << endl;
+				cout << cmds[i] << endl;
 				Executor exec(cmds[i]);
 				g_exes.push_back(exec);
 			}

@@ -27,7 +27,7 @@ int ProcessGrouper::Start()
 		if( exe.cmdHnd.redirectStdout != "" )
 			freopen(exe.cmdHnd.redirectStdout.c_str(), "w+", stdout);
 		if( exe.cmdHnd.redirectStdin != "" )
-			freopen(exe.cmdHnd.redirectStdin.c_str(), "r+", stdin);
+			freopen(exe.cmdHnd.redirectStdin.c_str(), "r", stdin);
 		if( exe.fd[0][0] != -1 ) {
 			dup2(exe.fd[0][0],0);
 		}
