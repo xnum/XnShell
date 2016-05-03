@@ -13,17 +13,28 @@ int ProcessGrouper::Start()
 		pid_t rc = fork();
 		exe.pid = rc;
 
+
 		if( rc < 0 ) { // fail
 			cout << "Fork() error" << endl;
 			return rc;
 		}
 
 		if( rc > 0 ) { // parent
-		setpgid(executors[i].pid,executors[0].pid);
+			if( i == 0 )
+				pgid = exe.pid;
+			setpgid(executors[i].pid,pgid);
 			continue;
 		}
 
 		//child
+		signal(SIGTTOU, SIG_DFL);
+		signal(SIGTTIN, SIG_DFL);
+		signal(SIGCHLD, SIG_DFL);
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
+		signal(SIGTSTP, SIG_DFL);
+		signal(SIGCONT, SIG_DFL);
+
 		if( exe.cmdHnd.redirectStdout != "" )
 			freopen(exe.cmdHnd.redirectStdout.c_str(), "w+", stdout);
 		if( exe.cmdHnd.redirectStdin != "" )
@@ -39,10 +50,6 @@ int ProcessGrouper::Start()
 	}
 
 	xnsh::CloseAllPipe(executors);
-
-	tcsetpgrp(0, executors[0].pid);
-	tcsetpgrp(1, executors[0].pid);
-	tcsetpgrp(2, executors[0].pid);
 
 	return 0;
 }
@@ -71,7 +78,20 @@ int ProcessGrouper::NotifyTerminated(pid_t pid) {
 }
 
 int ProcessGrouper::PassSignal(int sig) {
-	for( const Executor& exe : executors ) {
-		kill(exe.pid,sig);
+	if(executors.size() == 0) {
+		printf("Error:Process group doesn't contain any process\n");
+		exit(1);
 	}
+
+	// negtive for process group
+	kill(-(executors[0].pid),sig);
+}
+
+pid_t ProcessGrouper::GetPgid() {
+	if(executors.size() == 0) {
+		printf("Error:Process group doesn't contain any process\n");
+		exit(1);
+	}
+
+	return pgid;
 }

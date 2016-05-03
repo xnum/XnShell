@@ -4,126 +4,96 @@
 
 #include <signal.h>
 
-#include "Executor.h"
 #include "Parser.h"
 #include "InputHandler.h"
-#include "ProcessGrouper.h"
+#include "ProcessController.h"
 
-vector<ProcessGrouper> pgrps;
-bool ready = true;
+ProcessController procCtrl;
 
-void takeTermCtrl()
+void waitProc()
 {
-	pid_t pgid = getpgid(0);
-	printf("taking control of pgid = %d\n",pgid);
-
-	if( 0 != tcsetpgrp(0, pgid) )
-		puts("setpgrp error");
-	if( 0 != tcsetpgrp(1, pgid) )
-		puts("setpgrp error");
-	if( 0 != tcsetpgrp(2, pgid) )
-		puts("setpgrp error");
-	ready = true;
-}
-
-void childExit(int sig) {
-    int status = 0;
-    pid_t pid = wait(&status);
-    if( pid < 0 ) {
-        printf("wait error\n");
-    }
-    else {
-        printf("catch a child %d\n",pid);
-    }
-
-	for( size_t i = 0 ; i < pgrps.size() ; ++i ) {
-		int rc = pgrps[i].NotifyTerminated(pid);
-		if( rc != ProcNotMine ) {
-			if( rc == ProcAllDone ) {
-				pgrps.erase(pgrps.begin() + i);
-				takeTermCtrl();
-			}
+	while( 1 ) {
+		int status = 0;
+		pid_t pid = waitpid(WAIT_ANY, &status, 0 | WUNTRACED);
+		if( pid == -1 ) {
+			// do until errno == ECHILD
+			// means no more child 
+			if(errno != ECHILD)
+				printf("waitpid error: %s\n",strerror(errno));
 			break;
 		}
+
+		printf("waitpid ok: %d\n",pid);
+
+		if( WIFEXITED(status) ) {
+			int rc = procCtrl.FreeProcess(pid);
+			if( rc == ProcAllDone ) {
+				procCtrl.TakeTerminalControl(Shell);
+				printf("foreground process group all done");
+				return;
+			}
+		}
+		else if( WIFSTOPPED(status) ) {
+			procCtrl.TakeTerminalControl(Shell);
+			printf("waitpid got Stopped %d\n",pid);
+			return;
+		}
 	}
-
-    return;
-}
-
-void killSignal(int sig) {
-	if(pgrps.size() >= 1) 
-		pgrps[0].PassSignal(sig);
-	else
-		exit(0);
-	return;
 }
 
 void backToShell(int sig) {
-	printf("[0] %s Passing\n",pgrps[0].originCmds.c_str());
-	pgrps[0].PassSignal(SIGSTOP);
-	printf("[0] %s Paused\n",pgrps[0].originCmds.c_str());
-	takeTermCtrl();
+	procCtrl.TakeTerminalControl(Shell);
+	procCtrl.SendSignalToFG(SIGTSTP);
 	return;
 }
 
 void bringToFront()
 {
-	pgrps[0].PassSignal(SIGCONT);
-	printf("[0] %s Resumed\n",pgrps[0].originCmds.c_str());
+	procCtrl.TakeTerminalControl(ForeGround);
+	procCtrl.SendSignalToFG(SIGCONT);
 	return;
 }
 
 int main()
 {
+	procCtrl.SetShellPgid(getpgid(getpid()));
+	
 	signal(SIGTTOU, SIG_IGN);
-    signal(SIGCHLD, childExit);
-    signal(SIGINT, killSignal);
-    signal(SIGQUIT, killSignal);
-	signal(SIGTSTP, backToShell);
-    //char* const envp[] = { 0, NULL };
-    string line;
+	signal(SIGTTIN, SIG_IGN);
+	 signal(SIGTSTP, backToShell);
+	string line;
 
-    InputHandler InHnd;
-    while( 1 ) {
-		ready = false;
-		vector<Executor> g_exes;
-        cout << "$ ";
-        line = InHnd.Getline();
-		if( line == "" )
+	InputHandler InHnd;
+	while( 1 ) {
+		cout << "$ ";
+		line = InHnd.Getline();
+		if( line == "" ) {
 			continue;
-		if( line != "fg" ) {
+		}
+		else if( line == "quit" || line == "exit" ) {
+			exit(0);
+		}
+		else if( line == "fg" ) {
+			bringToFront();
+		}
+		else {
 			auto cmds = Parser::Parse(line);
 
-			for( size_t i = 0 ; i < cmds.size() ; ++i ) {
-				cout << cmds[i] << endl;
-				Executor exec(cmds[i]);
-				g_exes.push_back(exec);
+			vector<Executor> exes;
+			for( const auto& cmd : cmds ) {
+				//cout << cmd;
+				exes.emplace_back(Executor(cmd));
 			}
 
-			pgrps.emplace_back(ProcessGrouper(g_exes));
-			ProcessGrouper &pgrp = *pgrps.rbegin();
-			pgrp.originCmds = line;
-			if( 0 != pgrp.Start()) {
-				printf("Error: %s\n",strerror(errno));
-				pgrp.PassSignal(SIGKILL);
+			procCtrl.AddProcGroups(exes, line);
+			if( Failure== procCtrl.StartProc() ) {
 				continue;
 			}
 		}
-		else {
-			//bringToFront();
-		}
 
-		while( 1 ) {
-			if( ready == false ) {
-				usleep(10000);
-				//puts("wait...");
-			}
-			else
-				break;
-		}
-		//puts("next");
-    }
+		waitProc();
+	}
 
 	puts("dead");
-    return 0;
+	return 0;
 }

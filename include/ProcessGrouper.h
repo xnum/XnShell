@@ -24,7 +24,9 @@ class ProcessGrouper {
 		int Start();
 		int NotifyTerminated(pid_t);
 		int PassSignal(int sig);
+		pid_t GetPgid();
 
 	private:
 		vector<Executor> executors;
+		pid_t pgid;
 };
