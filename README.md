@@ -10,3 +10,6 @@ unix prog. hw3
 4. 建立pipe `cat /etc/passwd | cat | less`
 
 5. process group `ps -o pid,sid,pgid,ppid,cmd | cat | cat | tr A-Z a-z`
+
+6. background process `python -m SimpleHTTPServer 8083 &`
+ 
