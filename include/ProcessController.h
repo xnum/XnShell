@@ -27,7 +27,9 @@ class ProcessController {
 		void SetShellPgid(pid_t p) { shellPgid = p; }
 		int FreeProcess(pid_t);
 		int SendSignalToFG(int sig);
-
+		void BackToShell(int sig);
+		void BringToFront(int index);
+		void printJobs();
 	private:
 		vector<ProcessGrouper> pgrps;
 		int fgIndex;

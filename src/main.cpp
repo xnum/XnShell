@@ -23,34 +23,26 @@ void waitProc()
 			break;
 		}
 
-		printf("waitpid ok: %d\n",pid);
+		//printf("waitpid ok: %d\n",pid);
 
 		if( WIFEXITED(status) ) {
 			int rc = procCtrl.FreeProcess(pid);
 			if( rc == ProcAllDone ) {
 				procCtrl.TakeTerminalControl(Shell);
-				printf("foreground process group all done");
+				//printf("foreground process group all done");
 				return;
 			}
 		}
 		else if( WIFSTOPPED(status) ) {
 			procCtrl.TakeTerminalControl(Shell);
-			printf("waitpid got Stopped %d\n",pid);
+			//printf("waitpid got Stopped %d\n",pid);
 			return;
 		}
 	}
 }
 
 void backToShell(int sig) {
-	procCtrl.TakeTerminalControl(Shell);
-	procCtrl.SendSignalToFG(SIGTSTP);
-	return;
-}
-
-void bringToFront()
-{
-	procCtrl.TakeTerminalControl(ForeGround);
-	procCtrl.SendSignalToFG(SIGCONT);
+	procCtrl.BackToShell(sig);
 	return;
 }
 
@@ -60,7 +52,7 @@ int main()
 	
 	signal(SIGTTOU, SIG_IGN);
 	signal(SIGTTIN, SIG_IGN);
-	 signal(SIGTSTP, backToShell);
+	signal(SIGTSTP, backToShell);
 	string line;
 
 	InputHandler InHnd;
@@ -73,8 +65,18 @@ int main()
 		else if( line == "quit" || line == "exit" ) {
 			exit(0);
 		}
-		else if( line == "fg" ) {
-			bringToFront();
+		else if( line == "lsjob" ) {
+			procCtrl.printJobs();
+			continue;
+		}
+		else if( line.substr(0, 2) == "fg" ) {
+			auto cmds = Parser::Parse(line);
+			int index = -1;
+			if( cmds[0].args.size() == 1 ) {
+				stringstream ss(cmds[0].args[0]);
+				ss >> index;
+			}	
+			procCtrl.BringToFront(index);
 		}
 		else {
 			auto cmds = Parser::Parse(line);
