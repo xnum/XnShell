@@ -22,14 +22,15 @@ using xnsh::ProcessController;
 class ProcessController {
 	public:
 		int AddProcGroups(const vector<Executor>&, const string& cmd);
-		int StartProc();
+		int StartProc(bool isfg);
 		int TakeTerminalControl(pid_t);
 		void SetShellPgid(pid_t p) { shellPgid = p; }
 		int FreeProcess(pid_t);
 		int SendSignalToFG(int sig);
-		void BackToShell(int sig);
-		void BringToFront(int index);
+		void BackToShell();
+		int BringToFront(int index);
 		void printJobs();
+		void RefreshJobStatus();
 	private:
 		vector<ProcessGrouper> pgrps;
 		int fgIndex;

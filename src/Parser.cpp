@@ -76,10 +76,10 @@ vector<Command> Parser::Parse(string line,int &isfg)
 
 	if( ret.size() == 0 )
 		return ret;
-	if( ret[0].args.size() == 0 )
-		return ret;
 
 	Command& last = *ret.rbegin();
+	if( last.args.size() == 0 )
+		return ret;
 
 	if( *(last.args.rbegin()) == "&" ) {
 		isfg = 1;

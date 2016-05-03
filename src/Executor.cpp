@@ -55,6 +55,11 @@ int Executor::Start(const vector<Executor>& pgrp, int index)
         execvp(argv[0],argv);
     }
 
+	if( kill(pid, 0) ) {
+		exit(1);
+	}
+
+
     pid = rc;
 
     return 0;

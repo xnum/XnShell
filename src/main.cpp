@@ -41,8 +41,8 @@ void waitProc()
 	}
 }
 
-void backToShell(int sig) {
-	procCtrl.BackToShell(sig);
+void backToShell(int sig __attribute__((unused))) {
+	procCtrl.BackToShell();
 	return;
 }
 
@@ -57,9 +57,13 @@ int main()
 
 	InputHandler InHnd;
 	while( 1 ) {
+		int fg=0;
 		cout << "$ ";
 		line = InHnd.Getline();
 		if( line == "" ) {
+			procCtrl.TakeTerminalControl(Shell);
+			procCtrl.RefreshJobStatus();
+			printf("\b\b  \b\b");
 			continue;
 		}
 		else if( line == "quit" || line == "exit" ) {
@@ -70,20 +74,18 @@ int main()
 			continue;
 		}
 		else if( line.substr(0, 2) == "fg" ) {
-			int fg=0;
 			auto cmds = Parser::Parse(line,fg);
 			int index = -1;
 			if( cmds[0].args.size() == 1 ) {
 				stringstream ss(cmds[0].args[0]);
 				ss >> index;
 			}	
-			procCtrl.BringToFront(index);
+			if( Failure == procCtrl.BringToFront(index) ) {
+				continue;
+			}
 		}
 		else {
-			int fg=0;
 			auto cmds = Parser::Parse(line,fg);
-			if(fg == 0) puts("fg proc");
-			else		puts("bg proc");
 
 			vector<Executor> exes;
 			for( const auto& cmd : cmds ) {
@@ -92,12 +94,12 @@ int main()
 			}
 
 			procCtrl.AddProcGroups(exes, line);
-			if( Failure== procCtrl.StartProc() ) {
+			if( Failure == procCtrl.StartProc(fg==0 ? true : false) ) {
 				continue;
 			}
 		}
 
-		waitProc();
+		if(fg == 0)waitProc();
 	}
 
 	puts("dead");

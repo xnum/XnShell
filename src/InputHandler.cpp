@@ -21,7 +21,7 @@ int getch (void)
 		printf("tcgetattr error: %s\n",strerror(errno));
 		exit(1);
 	}
- 
+
     return ch;
 }
 
@@ -37,7 +37,8 @@ string InputHandler::Getline()
     while(1)
     {
         int ch = getch();
-		//printf("getting [%d]\n",ch);
+		if(ch == EOF)
+			return "";
         if(ch == KeyEnter) {
 			putchar('\n');
             return line;

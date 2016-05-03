@@ -85,6 +85,7 @@ int ProcessGrouper::PassSignal(int sig) {
 
 	// negtive for process group
 	kill(-(executors[0].pid),sig);
+	return 0;
 }
 
 pid_t ProcessGrouper::GetPgid() {
