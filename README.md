@@ -17,6 +17,8 @@ unix prog. hw3
 
 8. `quit` `exit` 離開
 
+9. `xenv add LANG C` 增加環境變數 `xenv rm LANG` 移除環境變數
+
 
 known bugs:
 
