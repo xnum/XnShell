@@ -62,7 +62,7 @@ ostream &operator<<(ostream &os, const Command &cmd)
     return os << out;
 }
 
-vector<Command> Parser::Parse(string line)
+vector<Command> Parser::Parse(string line,int &isfg)
 {
     vector<Command> ret;
 
@@ -73,6 +73,18 @@ vector<Command> Parser::Parse(string line)
         if(str!="")
             ret.push_back(takeCommand(str));
     }
+
+	if( ret.size() == 0 )
+		return ret;
+	if( ret[0].args.size() == 0 )
+		return ret;
+
+	Command& last = *ret.rbegin();
+
+	if( *(last.args.rbegin()) == "&" ) {
+		isfg = 1;
+		(last.args).pop_back();
+	}
 
     return ret;
 }

@@ -70,7 +70,8 @@ int main()
 			continue;
 		}
 		else if( line.substr(0, 2) == "fg" ) {
-			auto cmds = Parser::Parse(line);
+			int fg=0;
+			auto cmds = Parser::Parse(line,fg);
 			int index = -1;
 			if( cmds[0].args.size() == 1 ) {
 				stringstream ss(cmds[0].args[0]);
@@ -79,7 +80,10 @@ int main()
 			procCtrl.BringToFront(index);
 		}
 		else {
-			auto cmds = Parser::Parse(line);
+			int fg=0;
+			auto cmds = Parser::Parse(line,fg);
+			if(fg == 0) puts("fg proc");
+			else		puts("bg proc");
 
 			vector<Executor> exes;
 			for( const auto& cmd : cmds ) {

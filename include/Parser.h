@@ -49,7 +49,7 @@ ostream &operator<<(ostream &os, const Command &cmd);
 
 class Parser {
     public:
-        static vector<Command> Parse(string line);
+        static vector<Command> Parse(string line,int &isfg);
 
     private:
         static vector<string> split(const string &source, const string &delim);
