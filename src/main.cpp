@@ -46,6 +46,34 @@ void backToShell(int sig __attribute__((unused))) {
 	return;
 }
 
+void envEditor(vector<Command> cmds)
+{
+	const Command& cmd = cmds[0];
+
+	if( cmd.name != "xenv" )
+		goto GUIDE;
+	if( cmd.args[0] == "add" && cmd.args.size() == 3 ) {
+		if( -1 == setenv(cmd.args[1].c_str(), cmd.args[2].c_str(), 1) ) {
+			printf("setenv error: %s\n",strerror(errno));
+			return;
+		}
+	}
+	else if( cmd.args[0] == "rm" && cmd.args.size() == 2 ) {
+		if( -1 == unsetenv(cmd.args[1].c_str()) ) {
+			printf("unsetenv error: %s\n",strerror(errno));
+			return;
+		}
+	}
+	else
+		goto GUIDE;
+
+		return;
+GUIDE:
+	puts("Command Example: ");
+	puts("$ xenv add LANG C");
+	puts("$ xenv rm LANG");
+}
+
 int main()
 {
 	procCtrl.SetShellPgid(getpgid(getpid()));
@@ -71,6 +99,11 @@ int main()
 		}
 		else if( line == "lsjob" ) {
 			procCtrl.printJobs();
+			continue;
+		}
+		else if( line.substr(0, 4) == "xenv" ) {
+			auto cmds = Parser::Parse(line,fg);
+			envEditor(cmds);
 			continue;
 		}
 		else if( line.substr(0, 2) == "fg" ) {
