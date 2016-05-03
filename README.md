@@ -13,3 +13,11 @@ unix prog. hw3
 
 6. background process `python -m SimpleHTTPServer 8083 &`
  
+7. Ctrl+Z 暫停process `fg`喚醒process `fg 1`喚醒特定process `lsjob`列出process
+
+8. `quit` `exit` 離開
+
+
+known bugs:
+
+1. 執行一個找不到的指令 有可能造成程式hang住
