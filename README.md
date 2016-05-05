@@ -1,6 +1,12 @@
 unix prog. hw3
 -------------
 
+Build
+
+`$ mkdir obj bin`
+`$ make`
+
+
 1. 執行指令，例如`ls`，`vim` 
 
 2. 執行一個指令並殺死他`sleep 10` and Ctrl+C
