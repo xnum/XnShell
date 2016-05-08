@@ -4,6 +4,7 @@ unix prog. hw3
 Build
 
 `$ mkdir obj bin`
+
 `$ make`
 
 
@@ -25,6 +26,7 @@ Build
 
 9. `xenv add LANG C` 增加環境變數 `xenv rm LANG` 移除環境變數
 
+10. 擴展特殊符 `ls *` `ls ???` `ls ~` 
 
 known bugs:
 
