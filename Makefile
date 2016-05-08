@@ -47,7 +47,11 @@ TEST_SRCS := $(wildcard $(TESTDIR)/*.cpp)
 TEST_OBJS := $(TEST_SRCS:$(TESTDIR)/%.cpp=$(OBJDIR)/%.o)
 rm       = rm -f
 
-all: $(BINDIR)/$(TARGET)
+all: init $(BINDIR)/$(TARGET)
+
+init:
+	@mkdir -p obj
+	@mkdir -p bin
 
 .PHONEY: test
 test: $(BINDIR)/$(TEST_BIN)

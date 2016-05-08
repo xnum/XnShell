@@ -5,6 +5,9 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <algorithm>
+
+#include <glob.h>
 
 using namespace std;
 
@@ -50,10 +53,14 @@ ostream &operator<<(ostream &os, const Command &cmd);
 class Parser {
     public:
         static vector<Command> Parse(string line,int &isfg);
+        static bool IsExpandable(const string& line);
+        static vector<Command> ParseGlob(string line,int &isfg);
 
     private:
         static vector<string> split(const string &source, const string &delim);
         static string trim(const string& str);
+        static bool hasMetaChar(const string&);
+        static bool hasWord(const string&,const string&);
 
         static Command takeCommand(string);
 

@@ -63,26 +63,39 @@ int main()
 			printf("\b\b  \b\b");
 			continue;
 		}
-		else if( BuiltinHelper::isSupportCmd(line) ) {
-			int rc = BuiltinHelper::RunBuiltinCmd(line);
-			if( BH_IF_IS(rc, CONTINUE) )
-				continue;
-			if( BH_IF_IS(rc, RUN_FAIL) )
-				continue;
+		else if( BuiltinHelper::IsSupportCmd(line) ) {
+			if( Wait != BuiltinHelper::RunBuiltinCmd(line) )
+                continue;
 		}
 		else {
-			auto cmds = Parser::Parse(line,fg);
+            if( !Parser::IsExpandable(line) ) {
+                auto cmds = Parser::Parse(line,fg);
 
-			vector<Executor> exes;
-			for( const auto& cmd : cmds ) {
-				//cout << cmd;
-				exes.emplace_back(Executor(cmd));
-			}
+                vector<Executor> exes;
+                for( const auto& cmd : cmds )
+                    exes.emplace_back(Executor(cmd));
 
-			procCtrl.AddProcGroups(exes, line);
-			if( Failure == procCtrl.StartProc(fg==0 ? true : false) ) {
-				continue;
-			}
+                procCtrl.AddProcGroups(exes, line);
+                if( Failure == procCtrl.StartProc(fg==0 ? true : false) ) {
+                    continue;
+                }
+            }
+            else {
+                auto cmds = Parser::ParseGlob(line,fg);
+
+                if(cmds.size() == 0)
+                    continue;
+
+                vector<Executor> exes;
+                for( const auto& cmd : cmds ) {
+                    exes.emplace_back(Executor(cmd));
+                }
+
+                procCtrl.AddProcGroups(exes, line);
+                if( Failure == procCtrl.StartProc(fg==0 ? true : false) ) {
+                    continue;
+                }
+            }
 		}
 
 		if(fg == 0)waitProc();

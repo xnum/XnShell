@@ -1,7 +1,7 @@
 #include "BuiltinHelper.h"
 
 
-bool BuiltinHelper::isSupportCmd(string line)
+bool BuiltinHelper::IsSupportCmd(string line)
 {
 	const string cmd[] = {
 		"quit",
@@ -26,18 +26,18 @@ int BuiltinHelper::RunBuiltinCmd(string line)
 
 	if( isStartWith(line, "xenv") ) {
 		EnvHelper(line);
-		return CONTINUE;
+		return Success;
 	}
 
 	if( isStartWith(line, "lsjob") ) {
 		procCtrl.printJobs();
-		return CONTINUE;
+		return Success;
 	}
 
 	if( isStartWith(line, "fg") ) {
-		if( -1 == BringToFront(line) )
-			return RUN_FAIL;
-		return RUN_OK;
+		if( Failure == BringToFront(line) )
+			return Failure;
+		return Wait;
 	}
 
 	printf("no matching builtin command");
@@ -100,7 +100,7 @@ int BuiltinHelper::BringToFront(const string& line)
 		ss >> index;
 	}	
 	if( Failure == procCtrl.BringToFront(index) ) {
-		return -1;
+		return Failure;
 	}
-	return 0;
+	return Success;
 }

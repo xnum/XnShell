@@ -89,6 +89,64 @@ vector<Command> Parser::Parse(string line,int &isfg)
     return ret;
 }
 
+bool Parser::IsExpandable(const string& line)
+{
+    int notused = 0;
+    auto res = Parse(line, notused);
+    for( const auto& cmd : res ) {
+        for( const auto& arg : cmd.args ) {
+            if( hasMetaChar(arg) )
+                return true;
+        }
+    }
+
+    return false;
+}
+
+vector<Command> Parser::ParseGlob(string line, int &isfg)
+{
+    vector<Command> rawCmd = Parse(line,isfg);
+
+    for( size_t i = 0 ; i < rawCmd.size() ; ++i ) {
+        bool first = true;
+        glob_t globbuf;
+        for( size_t j = 0 ; j < rawCmd[i].args.size() ; ++j ) {
+            if( hasMetaChar(rawCmd[i].args[j]) ) {
+                if( first == false ) {
+                    glob(rawCmd[i].args[j].c_str(), GLOB_TILDE | GLOB_APPEND , NULL, &globbuf);
+                }
+                else {
+                    first = false;
+                    glob(rawCmd[i].args[j].c_str(), GLOB_TILDE , NULL, &globbuf);
+                }
+            }
+        }
+
+        if( globbuf.gl_pathc == 0 ) {
+            puts("no matching file found");
+            return vector<Command> ();
+        }
+
+        for( size_t j = 0 ; j < rawCmd[i].args.size() ; ++j ) {
+            rawCmd[i].args.erase(std::remove_if(rawCmd[i].args.begin(), 
+                                                rawCmd[i].args.end(),
+                    [](const string& word){
+                        return hasMetaChar(word);
+                    }));
+        }
+
+        for( size_t j = 0 ; j < globbuf.gl_pathc ; ++j ) {
+            rawCmd[i].args.emplace_back( string(globbuf.gl_pathv[j]) );
+        }
+
+        globfree(&globbuf);
+    }
+
+    return rawCmd;
+}
+
+
+
 /*
 http://ericsilverblade.blogspot.tw/2013/03/csplit.html
 */
@@ -167,3 +225,15 @@ Command Parser::takeCommand(string str)
 
     return ret;
 }
+
+bool Parser::hasMetaChar(const string& word)
+{
+    return hasWord(word,"*") || hasWord(word,"~") || hasWord(word,"?");
+}
+
+bool Parser::hasWord(const string& word, const string& key)
+{
+    return word.find(key) != string::npos;
+}
+
+

@@ -2,7 +2,8 @@
 
 enum SimpleRetVal {
 	Failure,
-	Success
+	Success,
+    Wait
 };
 
 enum PgidTarget {
