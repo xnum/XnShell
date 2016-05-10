@@ -1,12 +1,20 @@
 unix prog. hw3
 -------------
 
-Build
+## Introduction
+
+A simple shell program to execute some commands,
+
+and modern shell program's feature like pipe, process control, redirection...
+
+
+## Build
 
 `$ mkdir obj bin`
 
 `$ make`
 
+## Usage
 
 1. 執行指令，例如`ls`，`vim` 
 
