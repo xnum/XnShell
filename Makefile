@@ -53,7 +53,7 @@ init:
 	@mkdir -p obj
 	@mkdir -p bin
 
-.PHONEY: test
+.PHONY: test
 test: $(BINDIR)/$(TEST_BIN)
 
 $(BINDIR)/$(TEST_BIN): $(TEST_OBJS) $(filter-out $(OBJDIR)/main.o, $(OBJS))
@@ -68,10 +68,10 @@ $(OBJS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 $(TEST_OBJS): $(OBJDIR)/%.o : $(TESTDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -isystem $(GTEST_DIR)/include
 
-.PHONEY: clean
+.PHONY: clean
 clean:
 	$(rm) $(OBJDIR)/*
 
-.PHONEY: remove
+.PHONY: remove
 remove: clean
 	$(rm) $(BINDIR)/*

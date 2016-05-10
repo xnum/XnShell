@@ -8,7 +8,8 @@ bool BuiltinHelper::IsSupportCmd(string line)
 		"exit",
 		"lsjob",
 		"xenv",
-		"fg"
+		"fg",
+        "bg"
 	};
 
 	for( const string& s : cmd ) {
@@ -38,6 +39,12 @@ int BuiltinHelper::RunBuiltinCmd(string line)
 		if( Failure == BringToFront(line) )
 			return Failure;
 		return Wait;
+	}
+
+	if( isStartWith(line, "bg") ) {
+		if( Failure == BringToBack(line) )
+			return Failure;
+		return Success;
 	}
 
 	printf("no matching builtin command");
@@ -100,6 +107,21 @@ int BuiltinHelper::BringToFront(const string& line)
 		ss >> index;
 	}	
 	if( Failure == procCtrl.BringToFront(index) ) {
+		return Failure;
+	}
+	return Success;
+}
+
+int BuiltinHelper::BringToBack(const string& line)
+{
+	int fg = 0;
+	auto cmds = Parser::Parse(line,fg);
+	int index = -1;
+	if( cmds[0].args.size() == 1 ) {
+		stringstream ss(cmds[0].args[0]);
+		ss >> index;
+	}	
+	if( Failure == procCtrl.BringToBack(index) ) {
 		return Failure;
 	}
 	return Success;

@@ -30,6 +30,7 @@ class ProcessController {
 		int SendSignalToFG(int sig);
 		void BackToShell();
 		int BringToFront(int index);
+		int BringToBack(int index);
 		void printJobs();
 		void RefreshJobStatus();
 	private:

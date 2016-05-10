@@ -127,6 +127,27 @@ int ProcessController::BringToFront(int index)
 	return Success;
 }
 
+int ProcessController::BringToBack(int index)
+{
+	if( index == -1 ) {
+		//printf("FG default\n");
+		//TakeTerminalControl(ForeGround);
+		SendSignalToFG(SIGCONT);
+	}
+	else if( 0 <= index && index < (int)pgrps.size() ) {
+		//printf("FG spec\n");
+		fgIndex = index;
+		//TakeTerminalControl(ForeGround);
+		SendSignalToFG(SIGCONT);
+	}
+	else {
+		printf("Error: index out of range\n");
+		return Failure;
+	}
+
+	return Success;
+}
+
 void ProcessController::printJobs()
 {
 	for( size_t i = 0 ; i < pgrps.size() ; ++i ) {

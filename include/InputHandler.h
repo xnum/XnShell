@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 #include <cstdio>
 #include <cstdlib>
@@ -18,4 +19,6 @@ using xnsh::InputHandler;
 class InputHandler {
     public:
         string Getline();
+    private:
+        vector<string> history;
 };

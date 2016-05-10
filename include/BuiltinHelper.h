@@ -21,6 +21,7 @@ private:
 	static void GoExit();
 	static void EnvHelper(const string&);
 	static int BringToFront(const string&);
+    static int BringToBack(const string&);
 };
 
 
